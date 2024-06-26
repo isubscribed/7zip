@@ -43,9 +43,9 @@ endif ()
 
 set(MAIN_OUTPUT_DIR ${CMAKE_SOURCE_DIR}/Output/x64)
 
-add_library(Au7zUnpacker SHARED ${SOURCES})
+add_library(7z SHARED ${SOURCES})
 
-set_target_properties(Au7zUnpacker PROPERTIES
+set_target_properties(7z PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY_DEBUG ${MAIN_OUTPUT_DIR}/Debug/Binaries
     RUNTIME_OUTPUT_DIRECTORY_RELEASE ${MAIN_OUTPUT_DIR}/Release/Binaries
     RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${MAIN_OUTPUT_DIR}/MinSizeRel/Binaries
@@ -57,7 +57,7 @@ set_target_properties(Au7zUnpacker PROPERTIES
 )
 
 target_sources(
-    Au7zUnpacker PRIVATE
+    7z PRIVATE
 
     C/7zCrc.h
     C/7zTypes.h
