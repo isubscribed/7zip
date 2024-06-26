@@ -21,7 +21,6 @@ const fs::path kUnpackedFile = kTestDir / "Test7zip_unpacked.txt";
 const fs::path kPackedFile = kTestDir / "Test7zip_packed.zip";
 const std::wstring_view kPassword = L"-pabc!@#123ABC";
 const std::string_view kUnpackedContent = "*** TestContent_12345 ***";
-const int kMaxTempFileCount = 10000;
 
 HMODULE g_7zip = nullptr;
 UnpackFunc g_UnpackFunc = nullptr;
