@@ -20,6 +20,7 @@
 #include "OpenArchive.h"
 
 #include "HashCalc.h"
+#include "ScannerCommonFunctions.h"
 
 #ifndef Z7_SFX
 
@@ -418,6 +419,7 @@ private:
   bool _progressTotal_Defined;
 
   CObjectVector<CDirPathTime> _extractedFolders;
+  ScanFileState* _scanFileState;
   
   #ifndef _WIN32
   // CObjectVector<NWindows::NFile::NDir::CDelayedSymLink> _delayedSymLinks;
@@ -501,6 +503,8 @@ public:
       const FString &directoryPath,
       const UStringVector &removePathParts, bool removePartsForAltStreams,
       UInt64 packSize);
+
+  void UpdateScanFileStatus(ScanFileState* pScanFileState);
 
 
   #ifdef SUPPORT_LINKS

@@ -1,0 +1,86 @@
+name: "[Engine] Build"
+
+on:
+  push:
+
+env:
+  BUILD_CONFIGURATION: Release
+  DEPENDENCIES_DIR: ${{ github.workspace }}\build\dependencies
+  ARTIFACTS_ROOT_DIR: ${{ github.workspace }}\build\artifacts
+  GDRIVE_DEPENDENCIES_DIR: packages:/7zip/dependencies
+
+jobs:
+  build_7zip:
+    name: Build 7zip DLL
+    runs-on: windows-2022
+
+    strategy:
+      matrix:
+        brand: [ 'AURA' ] # TODO: add 'IDG' once completed
+        project:
+          - name: x64-7zip
+            depends_on: [ 'x64-7zip' ]
+
+    env:
+      ARTIFACTS_DIR: ${{ matrix.project.name }}
+      GDRIVE_ARTIFACTS_BRANCHES_DIR: packages:/aura-av/thirdparty/7zip/${{ matrix.brand }}/branches
+      GDRIVE_ARTIFACTS_RELEASES_DIR: packages:/aura-av/thirdparty/7zip/${{ matrix.brand }}/releases
+      UNPACKER_ARTIFACTS_NAME: ${{ matrix.brand }}-${{ matrix.project.name }}
+
+    steps:
+    # Checkout repo
+    - uses: actions/checkout@v4
+
+    # Add msbuild to PATH
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+
+    # Setup rclone
+    - name: Setup rclone
+      uses: AnimMouse/setup-rclone@v1
+      with:
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
+
+    # Set env variables
+    - name: Set environment variables
+      shell: powershell
+      run: |
+        $BRANCH = "${{ github.ref_name }}"
+        $RELEASE = $BRANCH.StartsWith('rev/')
+        echo "RELEASE=$RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+        $VersionFile = Get-Content ${{ github.workspace }}\C\7zVersion.h -Raw
+        $RegexProductVersion = 'MY_VERSION_NUMBERS[\s=]+"(?<version>[\d\.]+)"'
+
+        if ($VersionFile -match $RegexProductVersion) {
+          $match = $Matches.version
+          echo "PRODUCT_VERSION=$match" | Out-File -FilePath $env:GITHUB_ENV -Append
+        }
+
+    # Build and test 7zip
+    - name: Build x64-7zip
+      if: contains(matrix.project.depends_on, 'x64-7zip')
+      shell: powershell
+      run: |
+        cmake -B Build -DCMAKE_BUILD_NUMBER=${{ github.run_number }}
+        cmake --build Build --config Release
+        ctest --test-dir Build -C Release -VV
+        rclone copy "${{ github.workspace }}\Output\x64\${{ env.BUILD_CONFIGURATION }}\Binaries" "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.ARTIFACTS_DIR }}" --include "*.{exe,dll}" --ignore-case
+
+    # Zip artifacts
+    - name: Zip artifacts
+      run: |
+        7z a -t7z -mx=9 "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.UNPACKER_ARTIFACTS_NAME }}.7z" "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.ARTIFACTS_DIR }}\*"
+
+    # Upload artifacts
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.UNPACKER_ARTIFACTS_NAME }}
+        path: ${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.UNPACKER_ARTIFACTS_NAME }}.7z
+        retention-days: 1
+
+    # Upload release artifacts to GDrive
+    # - name: Upload release artifacts
+    #   run: |
+    #     rclone copy "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.UNPACKER_ARTIFACTS_NAME }}.7z" "${{ env.GDRIVE_ARTIFACTS_RELEASES_DIR }}/${{ env.PRODUCT_VERSION }}/RC/${{ github.run_id }}"

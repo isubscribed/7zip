@@ -426,6 +426,12 @@ Z7_COM7F_IMF(CArchiveExtractCallback::SetCompleted(const UInt64 *completeValue))
   if (!_extractCallback2)
     return S_OK;
 
+  CScannerCommonFunctions objScannerCommonFunctions;
+  if (objScannerCommonFunctions.CheckForScanAbortState(_scanFileState))
+  {
+    return E_ABORT;
+  }
+
   UInt64 packCur;
   if (_multiArchives)
   {
@@ -1208,6 +1214,12 @@ HRESULT CArchiveExtractCallback::CheckExistFile(FString &fullProcessedPath, bool
     if (_overwriteMode == NExtract::NOverwriteMode::kSkip)
       return S_OK;
     
+    CScannerCommonFunctions objScannerCommonFunctions;
+    if (objScannerCommonFunctions.CheckForScanAbortState(_scanFileState))
+    {
+      return E_ABORT;
+    }
+
     if (_overwriteMode == NExtract::NOverwriteMode::kAsk)
     {
       const int slashPos = fullProcessedPath.ReverseFind_PathSepar();
@@ -2688,27 +2700,9 @@ HRESULT CArchiveExtractCallback::SetDirsTimes()
     }
   }
 
-  /*
-  #ifndef _WIN32
-  for (i = 0; i < _delayedSymLinks.Size(); i++)
-  {
-    const CDelayedSymLink &link = _delayedSymLinks[i];
-    if (!link.Create())
-    {
-      if (res == S_OK)
-        res = GetLastError_noZero_HRESULT();
-      // res = E_FAIL;
-      // do we need error message here in Windows and in posix?
-      SendMessageError_with_LastError("Cannot create Symbolic Link", link._source);
-    }
-  }
-  #endif // _WIN32
-  */
-
   ClearExtractedDirsInfo();
   return res;
 }
-
 
 HRESULT CArchiveExtractCallback::CloseArc()
 {
@@ -2718,4 +2712,9 @@ HRESULT CArchiveExtractCallback::CloseArc()
     res = res2;
   _arc = NULL;
   return res;
+}
+
+void CArchiveExtractCallback::UpdateScanFileStatus(ScanFileState* pScanFileState)
+{
+    _scanFileState = pScanFileState;
 }

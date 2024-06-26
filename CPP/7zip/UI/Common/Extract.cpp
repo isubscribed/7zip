@@ -44,7 +44,8 @@ static HRESULT DecompressArchive(
     IFolderArchiveExtractCallback *callbackFAE,
     CArchiveExtractCallback *ecs,
     UString &errorMessage,
-    UInt64 &stdInProcessed)
+    UInt64& stdInProcessed,
+    ScanFileState* pScanFileState)
 {
   const CArc &arc = arcLink.Arcs.Back();
   stdInProcessed = 0;
@@ -97,8 +98,25 @@ static HRESULT DecompressArchive(
     
     CReadArcItem item;
 
+    UString result;
+    CScannerCommonFunctions objScannerCommonFunctions;
     for (UInt32 i = 0; i < numItems; i++)
     {
+      if (objScannerCommonFunctions.CheckForScanAbortState(pScanFileState))
+      {
+        realIndices.Clear();
+        break;
+      }
+
+      arc.GetItem_Path(i, result);
+      int efg = result.Len();
+      int iExtractLen = (arc.filePath.Len() + efg + 1); // inital path + "\" + item path
+
+      if (iExtractLen >= MAX_PATH)
+      {
+        continue;
+      }
+
       if (elimIsPossible
           || !allFilesAreAllowed
           || options.ExcludeDirItems
@@ -265,8 +283,6 @@ int Find_FileName_InSortedVector(const UStringVector &fileNames, const UString &
   return -1;
 }
 
-
-
 HRESULT Extract(
     // DECL_EXTERNAL_CODECS_LOC_VARS
     CCodecs *codecs,
@@ -282,20 +298,27 @@ HRESULT Extract(
     IHashCalc *hash,
     #endif
     UString &errorMessage,
-    CDecompressStat &st)
+    CDecompressStat &st,
+    ScanFileState* pScanFileState)
 {
   st.Clear();
   UInt64 totalPackSize = 0;
   CRecordVector<UInt64> arcSizes;
 
   unsigned numArcs = options.StdInMode ? 1 : arcPaths.Size();
-
   unsigned i;
-  
+  CBoolArr skipArcs(numArcs);
+  CScannerCommonFunctions objScannerCommonFunctions;
+
   for (i = 0; i < numArcs; i++)
   {
+    if (objScannerCommonFunctions.CheckForScanAbortState(pScanFileState))
+    {
+        return E_ABORT;
+    }
     NFind::CFileInfo fi;
     fi.Size = 0;
+    const UString& arrcPath = arcPaths[i];
     if (!options.StdInMode)
     {
       const FString arcPath = us2fs(arcPaths[i]);
@@ -312,17 +335,20 @@ HRESULT Extract(
         return errorCode;
       }
     }
+    if (arrcPath.Len() >= MAX_PATH) // new add so that it can skip files whose path length is reater or equal to 256
+    {
+      skipArcs[i] = true;
+      continue;
+    }
     arcSizes.Add(fi.Size);
     totalPackSize += fi.Size;
-  }
-
-  CBoolArr skipArcs(numArcs);
-  for (i = 0; i < numArcs; i++)
     skipArcs[i] = false;
+  }
 
   CArchiveExtractCallback *ecs = new CArchiveExtractCallback;
   CMyComPtr<IArchiveExtractCallback> ec(ecs);
   
+  ecs->UpdateScanFileStatus(pScanFileState);
   const bool multi = (numArcs > 1);
   
   ecs->InitForMulti(multi,
@@ -348,15 +374,17 @@ HRESULT Extract(
     if (skipArcs[i])
       continue;
 
+    if (objScannerCommonFunctions.CheckForScanAbortState(pScanFileState))
+    {
+      return E_ABORT;
+    }
+
     ecs->InitBeforeNewArchive();
 
     const UString &arcPath = arcPaths[i];
     NFind::CFileInfo fi;
     if (options.StdInMode)
     {
-      // do we need ctime and mtime?
-      // fi.ClearBase();
-      // fi.Size = 0; // (UInt64)(Int64)-1;
       if (!fi.SetAs_StdInFile())
         return GetLastError_noZero_HRESULT();
     }
@@ -370,43 +398,10 @@ HRESULT Extract(
       }
     }
 
-    /*
-    #ifndef Z7_NO_CRYPTO
-    openCallback->Open_Clear_PasswordWasAsked_Flag();
-    #endif
-    */
-
     RINOK(extractCallback->BeforeOpen(arcPath, options.TestMode))
     CArchiveLink arcLink;
 
     CObjectVector<COpenType> types2 = types;
-    /*
-    #ifndef Z7_SFX
-    if (types.IsEmpty())
-    {
-      int pos = arcPath.ReverseFind(L'.');
-      if (pos >= 0)
-      {
-        UString s = arcPath.Ptr(pos + 1);
-        int index = codecs->FindFormatForExtension(s);
-        if (index >= 0 && s == L"001")
-        {
-          s = arcPath.Left(pos);
-          pos = s.ReverseFind(L'.');
-          if (pos >= 0)
-          {
-            int index2 = codecs->FindFormatForExtension(s.Ptr(pos + 1));
-            if (index2 >= 0) // && s.CompareNoCase(L"rar") != 0
-            {
-              types2.Add(index2);
-              types2.Add(index);
-            }
-          }
-        }
-      }
-    }
-    #endif
-    */
 
     COpenOptions op;
     #ifndef Z7_SFX
@@ -477,11 +472,6 @@ HRESULT Extract(
 
     if (!options.StdInMode)
     {
-      // numVolumes += arcLink.VolumePaths.Size();
-      // arcLink.VolumesSize;
-
-      // totalPackSize -= DeleteUsedFileNamesFromList(arcLink, i + 1, arcPaths, arcPathsFull, &arcSizes);
-      // numArcs = arcPaths.Size();
       if (arcLink.VolumePaths.Size() != 0)
       {
         Int64 correctionSize = (Int64)arcLink.VolumesSize;
@@ -508,20 +498,6 @@ HRESULT Extract(
       }
     }
 
-    /*
-    // Now openCallback and extractCallback use same object. So we don't need to send password.
-
-    #ifndef Z7_NO_CRYPTO
-    bool passwordIsDefined;
-    UString password;
-    RINOK(openCallback->Open_GetPasswordIfAny(passwordIsDefined, password))
-    if (passwordIsDefined)
-    {
-      RINOK(extractCallback->SetPassword(password))
-    }
-    #endif
-    */
-
     CArc &arc = arcLink.Arcs.Back();
     arc.MTime.Def = !options.StdInMode
         #ifdef _WIN32
@@ -547,7 +523,7 @@ HRESULT Extract(
         options,
         calcCrc,
         extractCallback, faeCallback, ecs,
-        errorMessage, packProcessed))
+        errorMessage, packProcessed, pScanFileState))
 
     if (!options.StdInMode)
       packProcessed = fi.Size + arcLink.VolumesSize;

@@ -13,6 +13,8 @@
 #include "Property.h"
 
 #include "../Common/LoadCodecs.h"
+#include "ScannerCommonFunctions.h"
+
 
 struct CExtractOptionsBase
 {
@@ -102,6 +104,7 @@ HRESULT Extract(
     IHashCalc *hash,
     #endif
     UString &errorMessage,
-    CDecompressStat &st);
+    CDecompressStat &st,
+    ScanFileState* pScanFileState);
 
 #endif
