@@ -31,10 +31,7 @@ PackFunc g_PackFunc = nullptr;
 template <typename F>
 void InitFunc(F& function, const char* funcName)
 {
-    if (g_7zip)
-    {
-        function = reinterpret_cast<F>(GetProcAddress(g_7zip, funcName));
-    }
+    function = reinterpret_cast<F>(GetProcAddress(g_7zip, funcName));
 }
 
 TEST_CASE("Setup")
