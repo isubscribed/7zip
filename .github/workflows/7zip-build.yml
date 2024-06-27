@@ -57,8 +57,8 @@ jobs:
       run: |
         cmake -B Build -DCMAKE_BUILD_NUMBER=${{ github.run_number }}
         cmake --build Build --config Release
-        ctest --test-dir Build -C Release -VV
         rclone copy "${{ github.workspace }}\Output\x64\${{ env.BUILD_CONFIGURATION }}\Binaries" "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.ARTIFACTS_DIR }}" --include "*.{exe,dll}" --ignore-case
+        ctest --test-dir Build -C Release -VV
 
     # Zip artifacts
     - name: Zip artifacts
