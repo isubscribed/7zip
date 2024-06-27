@@ -787,10 +787,6 @@ static void PrintStat(const UInt64 startTime)
 
 #endif // ! _WIN32
 
-
-
-
-
 static void PrintHexId(CStdOutStream &so, UInt64 id)
 {
   char s[32];
@@ -813,6 +809,12 @@ int Main2(
   #endif
 )
 {
+    return 0;
+}
+
+int ExtractArchiveFile(const TCHAR* chAction, const TCHAR* chArchiveName, const TCHAR* chInOutputFolderName,
+    const TCHAR* chPassword, const TCHAR* chFileFilter, ScanFileState* pScanFileState)
+{
   #if defined(MY_CPU_SIZEOF_POINTER)
     { unsigned k = sizeof(void *); if (k != MY_CPU_SIZEOF_POINTER) throw "incorrect MY_CPU_PTR_SIZE"; }
   #endif
@@ -831,49 +833,40 @@ int Main2(
   const UInt64 startTime = Get_timeofday_us();
   #endif
 
-  /*
-  {
-    g_StdOut << "DWORD:" << (unsigned)sizeof(DWORD);
-    g_StdOut << " LONG:" << (unsigned)sizeof(LONG);
-    g_StdOut << " long:" << (unsigned)sizeof(long);
-    #ifdef _WIN64
-    // g_StdOut << " long long:" << (unsigned)sizeof(long long);
-    #endif
-    g_StdOut << " int:" << (unsigned)sizeof(int);
-    g_StdOut << " void*:"  << (unsigned)sizeof(void *);
-    g_StdOut << endl;
-  }
-  */
-
   UStringVector commandStrings;
-  
-  #ifdef _WIN32
-  NCommandLineParser::SplitCommandLine(GetCommandLineW(), commandStrings);
-  #else
-  {
-    if (numArgs > 0)
-      Set_ModuleDirPrefix_From_ProgArg0(args[0]);
-
-    for (int i = 0; i < numArgs; i++)
-    {
-      AString a (args[i]);
-#if 0
-      printf("\n%d %s :", i, a.Ptr());
-      for (unsigned k = 0; k < a.Len(); k++)
-        printf(" %2x", (unsigned)(Byte)a[k]);
-#endif
-      const UString s = MultiByteToUnicodeString(a);
-      commandStrings.Add(s);
-    }
-    // printf("\n");
-  }
-
-  #endif
 
   #ifndef UNDER_CE
   if (commandStrings.Size() > 0)
     commandStrings.Delete(0);
   #endif
+
+  commandStrings.Add((UString)chAction);
+  commandStrings.Add((UString)chArchiveName);
+
+  if (chPassword != NULL)
+  {
+    commandStrings.Add((UString)chPassword);
+  }
+  else
+  {
+    char strPassword[MAX_PATH] = { 0 };
+    wcstombs(strPassword, L"-p", MAX_PATH);
+    commandStrings.Add((UString)strPassword);
+  }
+  commandStrings.Add((UString)chInOutputFolderName);
+  if (chFileFilter != NULL)
+  {
+    char cFileFilters[MAX_PATH] = { 0 };
+    wcstombs(cFileFilters, chFileFilter, MAX_PATH);
+    char* token = strtok(cFileFilters, " ");
+    while (token != NULL)
+    {
+      commandStrings.Add((UString)token);
+      token = strtok(NULL, " ");
+    }
+    commandStrings.Add((UString)"-r");
+  }
+  commandStrings.Add((UString)"-y");
 
   if (commandStrings.Size() == 0)
   {
@@ -1383,9 +1376,8 @@ int Main2(
           ArchivePathsSorted,
           ArchivePathsFullSorted,
           options.Censor.Pairs.Front().Head,
-          eo,
-          ecs, ecs, ecs,
-          hashCalc, errorMessage, stat);
+          eo, ecs, ecs, ecs,
+          hashCalc, errorMessage, stat, pScanFileState);
       
       ecs->ClosePercents();
 
@@ -1629,4 +1621,44 @@ int Main2(
   ThrowException_if_Error(hresultMain);
 
   return retCode;
+}
+
+/*-------------------------------------------------------------------------------------
+    Function		: UnMax7zArchive
+    In Parameters	: TCHAR * chAction-x(for extraction) switches from 7zip
+                      TCHAR * chArchiveName-file to be extratced
+                      TCHAR * chOutputFolderName-Extraction folder
+                      LPTSTR szPassword-Password
+                      LPTSTR szFilterFile-type of file to be extracted e.g   *.bak *.txt *.exe
+                      ScanFileState* pScanFileState current state of scanner
+    Out Parameters	: returns true if successfull
+    Purpose			: Exported function to call "ExtractFile" for extraction purpose
+    Author			: Sandip Sanap
+    Description		: It is a exported function which calls "ExtractFile" for extraction purpose
+--------------------------------------------------------------------------------------*/
+
+bool WINAPI __stdcall UnMax7zArchive(const TCHAR* chAction, const TCHAR* chArchiveName,
+    const TCHAR* chOutputFolderName, const TCHAR* chPassword, const TCHAR* chFileFilter,
+    ScanFileState* pScanFileState)
+{
+  int iRet = ExtractArchiveFile(chAction, chArchiveName, chOutputFolderName,
+      chPassword, chFileFilter, pScanFileState);
+  return iRet == 0;
+}
+
+/*-------------------------------------------------------------------------------------
+Function		: Max7zArchive
+In Parameters	: TCHAR * chAction- a(for archive) switches from 7zip
+TCHAR * chArchiveName-file to be extratced
+TCHAR * chOutputFolderName-Extraction folder
+Out Parameters	: returns true if successfull
+Purpose			: Exported function to call "ExtractFile" for extraction purpose
+Author			: Sandip Sanap
+Description		: It is a exported function which calls "ExtractFile" for extraction purpose
+--------------------------------------------------------------------------------------*/
+bool WINAPI __stdcall Max7zArchive(const TCHAR* chAction, const TCHAR* chArchiveName,
+    const TCHAR* chInputFileFolderName, const TCHAR* chPassword, const TCHAR* chFileFilter)
+{
+  int iRet = ExtractArchiveFile(chAction, chArchiveName, chInputFileFolderName, chPassword, chFileFilter, NULL);
+  return iRet == 0;
 }
