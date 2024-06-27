@@ -686,7 +686,6 @@
     <ClInclude Include="List.h" />
     <ClInclude Include="OpenCallbackConsole.h" />
     <ClInclude Include="PercentPrinter.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="UpdateCallbackConsole.h" />
     <ClInclude Include="UserInputUtils.h" />

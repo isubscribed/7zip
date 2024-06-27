@@ -1,13 +1,12 @@
 name: "Build 7zip DLL"
 
 on:
-  push:
+  workflow_dispatch:
 
 env:
   BUILD_CONFIGURATION: Release
   DEPENDENCIES_DIR: ${{ github.workspace }}\build\dependencies
   ARTIFACTS_ROOT_DIR: ${{ github.workspace }}\build\artifacts
-  GDRIVE_DEPENDENCIES_DIR: packages:/7zip/dependencies
 
 jobs:
   build_7zip:
@@ -16,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        brand: [ 'AURA' ] # TODO: add 'IDG' once completed
+        brand: [ 'AURA' ]
         project:
           - name: x64-7zip
             depends_on: [ 'x64-7zip' ]
@@ -48,14 +47,8 @@ jobs:
         $BRANCH = "${{ github.ref_name }}"
         $RELEASE = $BRANCH.StartsWith('rev/')
         echo "RELEASE=$RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-        $VersionFile = Get-Content ${{ github.workspace }}\C\7zVersion.h -Raw
-        $RegexProductVersion = 'MY_VERSION_NUMBERS[\s=]+"(?<version>[\d\.]+)"'
-
-        if ($VersionFile -match $RegexProductVersion) {
-          $match = $Matches.version
-          echo "PRODUCT_VERSION=$match" | Out-File -FilePath $env:GITHUB_ENV -Append
-        }
+        $Version = ${{ github.workspace }}\win-scannersdk\getVersion.ps1 ${{ github.workspace }}
+        echo "PRODUCT_VERSION=$Version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     # Build and test 7zip
     - name: Build x64-7zip

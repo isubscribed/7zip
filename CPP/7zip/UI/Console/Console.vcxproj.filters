@@ -598,7 +598,6 @@
     <ClInclude Include="..\..\PropID.h">
       <Filter>Interface</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="..\..\Common\MultiOutStream.h">
       <Filter>Common</Filter>
     </ClInclude>
