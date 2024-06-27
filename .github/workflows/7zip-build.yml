@@ -23,8 +23,8 @@ jobs:
 
     env:
       ARTIFACTS_DIR: ${{ matrix.project.name }}
-      GDRIVE_ARTIFACTS_BRANCHES_DIR: packages:/aura-av/thirdparty/7zip/${{ matrix.brand }}/branches
-      GDRIVE_ARTIFACTS_RELEASES_DIR: packages:/aura-av/thirdparty/7zip/${{ matrix.brand }}/releases
+      GDRIVE_ARTIFACTS_BRANCHES_DIR: packages:/aura-av/dependencies/7z/${{ matrix.brand }}/branches
+      GDRIVE_ARTIFACTS_RELEASES_DIR: packages:/aura-av/dependencies/7z/${{ matrix.brand }}/releases
       UNPACKER_ARTIFACTS_NAME: ${{ matrix.brand }}-${{ matrix.project.name }}
 
     steps:
@@ -80,7 +80,14 @@ jobs:
         path: ${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.UNPACKER_ARTIFACTS_NAME }}.7z
         retention-days: 1
 
+    # Upload branch artifacts to GDrive
+    - name: Upload branch artifacts
+      if: (env.RELEASE == 'False')
+      run: |
+        rclone copy "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.UNPACKER_ARTIFACTS_NAME }}.7z" "${{ env.GDRIVE_ARTIFACTS_BRANCHES_DIR }}/${{ github.ref_name }}/${{ github.run_id }}"
+
     # Upload release artifacts to GDrive
-    # - name: Upload release artifacts
-    #   run: |
-    #     rclone copy "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.UNPACKER_ARTIFACTS_NAME }}.7z" "${{ env.GDRIVE_ARTIFACTS_RELEASES_DIR }}/${{ env.PRODUCT_VERSION }}/RC/${{ github.run_id }}"
+    - name: Upload release artifacts
+      if: (env.RELEASE == 'True')  
+      run: |
+        rclone copy "${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.UNPACKER_ARTIFACTS_NAME }}.7z" "${{ env.GDRIVE_ARTIFACTS_RELEASES_DIR }}/${{ env.PRODUCT_VERSION }}/RC/${{ github.run_id }}"
