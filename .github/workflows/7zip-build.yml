@@ -23,8 +23,8 @@ jobs:
 
     env:
       ARTIFACTS_DIR: ${{ matrix.project.name }}
-      GDRIVE_ARTIFACTS_BRANCHES_DIR: packages:/aura-av/dependencies/7z/${{ matrix.brand }}/branches
-      GDRIVE_ARTIFACTS_RELEASES_DIR: packages:/aura-av/dependencies/7z/${{ matrix.brand }}/releases
+      GDRIVE_ARTIFACTS_BRANCHES_DIR: packages:/aura-av/dependencies/7z/branches
+      GDRIVE_ARTIFACTS_RELEASES_DIR: packages:/aura-av/dependencies/7z/releases
       UNPACKER_ARTIFACTS_NAME: ${{ matrix.brand }}-${{ matrix.project.name }}
 
     steps:
