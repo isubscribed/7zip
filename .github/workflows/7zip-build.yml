@@ -1,7 +1,7 @@
 name: "Build 7zip DLL"
 
 on:
-  workflow_dispatch:
+  push:
 
 env:
   BUILD_CONFIGURATION: Release
