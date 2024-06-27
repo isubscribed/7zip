@@ -1,4 +1,4 @@
-name: "[Engine] Build"
+name: "Build 7zip DLL"
 
 on:
   push:
