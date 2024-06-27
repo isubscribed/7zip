@@ -47,7 +47,7 @@ jobs:
         $BRANCH = "${{ github.ref_name }}"
         $RELEASE = $BRANCH.StartsWith('rev/')
         echo "RELEASE=$RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
-        $Version = ${{ github.workspace }}\win-scannersdk\getVersion.ps1 ${{ github.workspace }}
+        $Version = ${{ github.workspace }}\Scripts\getVersion.ps1 ${{ github.workspace }}
         echo "PRODUCT_VERSION=$Version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
     # Build and test 7zip
