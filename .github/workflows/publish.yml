@@ -1,7 +1,9 @@
 name: "Publish 7zip DLL"
 
 on:
-  workflow_call:
+  push:
+    paths-ignore:
+      - '**.md'
 
 jobs:
   build:

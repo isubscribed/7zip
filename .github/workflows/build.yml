@@ -1,9 +1,7 @@
 name: Build 7zip DLL
 
 on:
-  push:
-    paths-ignore:
-      - '**.md'
+  workflow_call:
 
 jobs:
   build:
