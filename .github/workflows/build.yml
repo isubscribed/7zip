@@ -20,10 +20,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: AnimMouse/setup-rclone@v1
-      with:
-        rclone_config: ${{ secrets.RCLONE_CONFIG }}
-
     - name: Build 7zip x64
       shell: powershell
       run: |
@@ -37,8 +33,7 @@ jobs:
 
     - name: Zip artifacts
       run: |
-        rclone copy "${{ github.workspace }}\Output\x64\${{ matrix.target }}\*" "${{ env.ARTIFACTS_DIR }}" --ignore-case
-        7z a -t7z -mx=9 "${{ env.ARTIFACTS_DIR }}\${{ env.PROJECT_NAME }}.7z" "${{ env.ARTIFACTS_DIR }}\*"
+        7z a -t7z -mx=9 "${{ env.ARTIFACTS_DIR }}\${{ env.PROJECT_NAME }}.7z" "${{ github.workspace }}\Output\x64\${{ matrix.target }}\*"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
