@@ -39,11 +39,11 @@ jobs:
 
     - name: Run tests
       shell: powershell
-      run:
+      run: |
         ctest --test-dir Build -C ${{ env.BUILD_CONFIGURATION }} -VV
 
     - name: Zip artifacts
-      run:
+      run: |
         rclone copy "${{ github.workspace }}\Output\x64\${{ env.BUILD_CONFIGURATION }}\Binaries" "${{ env.ARTIFACTS_DIR }}" --include "*.{dll}" --ignore-case
         7z a -t7z -mx=9 "${{ env.ARTIFACTS_DIR }}\${{ env.PROJECT_NAME }}.7z" "${{ env.ARTIFACTS_DIR }}\*"
 
