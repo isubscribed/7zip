@@ -262,6 +262,7 @@ target_sources(
 	CPP/7zip/UI/Console/UpdateCallbackConsole.cpp
 	CPP/7zip/UI/Console/UserInputUtils.cpp
 	CPP/7zip/UI/Console/console.def
+    CPP/7zip/UI/Console/resource.rc
 )
 
 add_executable(Test_7zip Test_7zip/test_7zip.cpp)
