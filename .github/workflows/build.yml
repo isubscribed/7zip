@@ -1,0 +1,53 @@
+name: "Build 7zip DLL"
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+
+env:
+  BUILD_CONFIGURATION: Release
+  ARTIFACTS_DIR: ${{ github.workspace }}\build\artifacts\7zip
+  PROJECT_NAME: x64-7zip
+
+jobs:
+  build_dll:
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup msbuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Set environment variables
+      shell: powershell
+      run: |
+        $BRANCH = "${{ github.ref_name }}"
+        $RELEASE = $BRANCH.StartsWith('rev/')
+        echo "RELEASE=$RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $Version = ${{ github.workspace }}\Scripts\getVersion.ps1 ${{ github.workspace }}
+        echo "PRODUCT_VERSION=$Version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: Build 7zip x64
+      shell: powershell
+      run: |
+        cmake -B Build -DCMAKE_BUILD_NUMBER=${{ github.run_number }}
+        cmake --build Build --config ${{ env.BUILD_CONFIGURATION }}
+
+    - name: Run tests
+      shell: powershell
+      run:
+        ctest --test-dir Build -C ${{ env.BUILD_CONFIGURATION }} -VV
+
+    - name: Zip artifacts
+      run:
+        rclone copy "${{ github.workspace }}\Output\x64\${{ env.BUILD_CONFIGURATION }}\Binaries" "${{ env.ARTIFACTS_DIR }}" --include "*.{dll}" --ignore-case
+        7z a -t7z -mx=9 "${{ env.ARTIFACTS_DIR }}\${{ env.PROJECT_NAME }}.7z" "${{ env.ARTIFACTS_DIR }}\*"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PROJECT_NAME }}
+        path: ${{ env.ARTIFACTS_ROOT_DIR }}\${{ env.PROJECT_NAME }}.7z
+        retention-days: 7
