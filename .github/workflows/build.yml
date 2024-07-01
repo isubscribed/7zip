@@ -6,16 +6,16 @@ on:
       - '**.md'
 
 jobs:
-  strategy:
-      matrix:
-        target: [ Debug, Release ]
-
-  env:
-    ARTIFACTS_DIR: ${{ github.workspace }}\build\artifacts\7zip
-    PROJECT_NAME: 7zip-x64-${{ matrix.target }}
-
   build_7zip:
     runs-on: windows-2022
+
+    strategy:
+        matrix:
+          target: [ Debug, Release ]
+
+    env:
+      ARTIFACTS_DIR: ${{ github.workspace }}\build\artifacts\7zip
+      PROJECT_NAME: 7zip-x64-${{ matrix.target }}
 
     steps:
     - uses: actions/checkout@v4
