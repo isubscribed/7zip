@@ -11,14 +11,16 @@ env:
   PROJECT_NAME: x64-7zip
 
 jobs:
-  build_dll:
+  build_7zip:
     runs-on: windows-2022
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup msbuild
-      uses: microsoft/setup-msbuild@v1.1
+    - name: Setup rclone
+      uses: AnimMouse/setup-rclone@v1
+      with:
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
 
     - name: Set environment variables
       shell: powershell
