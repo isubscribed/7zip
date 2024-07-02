@@ -16,9 +16,9 @@ jobs:
     
     env:
       DOWNLOAD_ARTIFACTS_DIR: ${{ github.workspace }}\build\downloaded-artifacts
-      UPLOAD_ARTIFACTS_DIR: ${{ github.workspace }}\build\artifacts\7zip
+      UPLOAD_ARTIFACTS_DIR: ${{ github.workspace }}\build\upload-artifacts
       ARTIFACTS_NAME: 7zip-x64-Release
-      GDRIVE_ARTIFACTS_RELEASES_DIR: packages:/aura-av/dependencies/7z/releases
+      GDRIVE_ARTIFACTS_RELEASES_DIR: ${{ secrets.ARTIFACTS_STORAGE_ROOT_PATH }}/7z/releases
 
     steps:
     - uses: actions/checkout@v4
@@ -49,10 +49,8 @@ jobs:
 
     - name: Zip output folder
       run: |
-        rclone copy "${{ env.DOWNLOAD_ARTIFACTS_DIR }}\Binaries" "${{ env.UPLOAD_ARTIFACTS_DIR }}" --include "*.{exe,dll,pdb}" --ignore-case
-        7z a -t7z -mx=9 "${{ env.UPLOAD_ARTIFACTS_DIR }}\${{ env.ARTIFACTS_NAME }}.7z" "${{ env.UPLOAD_ARTIFACTS_DIR }}\*"
+        7z a -t7z -mx=9 "${{ env.UPLOAD_ARTIFACTS_DIR }}\${{ env.ARTIFACTS_NAME }}.7z" "${{ env.DOWNLOAD_ARTIFACTS_DIR }}\Binaries\*"
 
-    # Upload release artifacts to GDrive
-    - name: Upload release artifacts
+    - name: Upload RC artifacts
       run: |
         rclone copy "${{ env.UPLOAD_ARTIFACTS_DIR }}\${{ env.ARTIFACTS_NAME }}.7z" "${{ env.GDRIVE_ARTIFACTS_RELEASES_DIR }}/${{ env.PRODUCT_VERSION }}/RC/${{ github.run_id }}"
