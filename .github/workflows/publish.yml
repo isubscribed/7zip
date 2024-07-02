@@ -1,0 +1,55 @@
+name: "Publish 7zip DLL"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-reusable.yml
+    secrets: inherit
+
+  publish:
+    runs-on: windows-2022
+    needs: [build]
+    
+    env:
+      DOWNLOAD_ARTIFACTS_DIR: ${{ github.workspace }}\build\downloaded-artifacts
+      UPLOAD_ARTIFACTS_DIR: ${{ github.workspace }}\build\upload-artifacts
+      ARTIFACTS_NAME: 7zip-x64-Release
+      GDRIVE_ARTIFACTS_RELEASES_DIR: ${{ secrets.ARTIFACTS_STORAGE_ROOT_PATH }}/7z/releases
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: AnimMouse/setup-rclone@v1
+      with:
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
+
+    - name: Download artifacts 7zip-x64-Release
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.ARTIFACTS_NAME }}
+        path: ${{ env.DOWNLOAD_ARTIFACTS_DIR }}
+      
+    - name: Unzip files
+      run: |
+        7z x "${{ env.DOWNLOAD_ARTIFACTS_DIR }}\${{ env.ARTIFACTS_NAME }}.7z" "-o${{ env.DOWNLOAD_ARTIFACTS_DIR }}" -aoa
+       
+    - name: Set environment variables
+      shell: powershell
+      run: |
+        $BRANCH = "${{ github.ref_name }}"
+        $RELEASE = $BRANCH.StartsWith('rev/')
+        echo "RELEASE=$RELEASE" | Out-File -FilePath $env:GITHUB_ENV -Append
+        
+        $Version = ${{ github.workspace }}\Scripts\getVersion.ps1 ${{ github.workspace }}
+        echo "PRODUCT_VERSION=$Version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    - name: Zip output folder
+      run: |
+        7z a -t7z -mx=9 "${{ env.UPLOAD_ARTIFACTS_DIR }}\${{ env.ARTIFACTS_NAME }}.7z" "${{ env.DOWNLOAD_ARTIFACTS_DIR }}\Binaries\*"
+
+    - name: Upload RC artifacts
+      run: |
+        rclone copy "${{ env.UPLOAD_ARTIFACTS_DIR }}\${{ env.ARTIFACTS_NAME }}.7z" "${{ env.GDRIVE_ARTIFACTS_RELEASES_DIR }}/${{ env.PRODUCT_VERSION }}/RC/${{ github.run_id }}"
+  

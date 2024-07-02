@@ -27,7 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>Au7zUnpacker</ProjectName>
+    <ProjectName>7z</ProjectName>
     <ProjectGuid>{483C6AC7-F572-41FE-8115-F754E922BDD3}</ProjectGuid>
     <RootNamespace>Console</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
@@ -686,7 +686,6 @@
     <ClInclude Include="List.h" />
     <ClInclude Include="OpenCallbackConsole.h" />
     <ClInclude Include="PercentPrinter.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="UpdateCallbackConsole.h" />
     <ClInclude Include="UserInputUtils.h" />
