@@ -52,3 +52,4 @@ jobs:
     - name: Upload RC artifacts
       run: |
         rclone copy "${{ env.UPLOAD_ARTIFACTS_DIR }}\${{ env.ARTIFACTS_NAME }}.7z" "${{ env.GDRIVE_ARTIFACTS_RELEASES_DIR }}/${{ env.PRODUCT_VERSION }}/RC/${{ github.run_id }}"
+  
