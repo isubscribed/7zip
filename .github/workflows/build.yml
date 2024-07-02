@@ -1,0 +1,12 @@
+name: Build 7zip DLL
+
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-reusable.yml
+    secrets: inherit
