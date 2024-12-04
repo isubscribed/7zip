@@ -3,7 +3,9 @@
 #include "StdAfx.h"
 
 #include "DLL.h"
-
+#ifndef _delayimp_h
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+#endif
 #ifdef _WIN32
 
 #ifndef _UNICODE
@@ -61,7 +63,7 @@ bool CLibrary::Load(CFSTR path) throw()
 
 bool MyGetModuleFileName(FString &path)
 {
-  const HMODULE hModule = g_hInstance;
+  const HMODULE hModule = (HINSTANCE)&__ImageBase;
   path.Empty();
   #ifndef _UNICODE
   if (!g_IsNT)
