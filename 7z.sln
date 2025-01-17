@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "7z", "CPP\7zip\UI\Console\Console.vcxproj", "{483C6AC7-F572-41FE-8115-F754E922BDD3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Au7zUnpacker", "CPP\7zip\UI\Console\Console.vcxproj", "{483C6AC7-F572-41FE-8115-F754E922BDD3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test_7zip", "Test_7zip\Test_7zip.vcxproj", "{D62F2807-4DB3-47C8-9D31-2270CA58E50B}"
 	ProjectSection(ProjectDependencies) = postProject

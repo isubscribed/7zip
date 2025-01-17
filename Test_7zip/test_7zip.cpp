@@ -15,7 +15,7 @@ using UnpackFunc = bool (*)(const TCHAR* chAction, const TCHAR* chArchiveName, c
 using PackFunc = bool (*)(const TCHAR* chAction, const TCHAR* chArchiveName, const TCHAR* chInputFileFolderName,
     const TCHAR* chPassword, const TCHAR* chFileFilter);
 
-const std::wstring_view k7zipLibName = L"Binaries\\7z.dll";
+const std::wstring_view k7zipLibName = L"Binaries\\Au7zUnpacker.dll";
 const fs::path kTestDir = fs::temp_directory_path() / "Test7zipFiles";
 const fs::path kUnpackedFile = kTestDir / "Test7zip_unpacked.txt";
 const fs::path kPackedFile = kTestDir / "Test7zip_packed.zip";
